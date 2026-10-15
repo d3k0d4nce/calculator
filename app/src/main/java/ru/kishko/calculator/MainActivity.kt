@@ -1,5 +1,6 @@
 package ru.kishko.calculator
 
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,6 +26,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -50,9 +52,17 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Calculator() {
     var input by rememberSaveable { mutableStateOf("0") }
-    var savedValue by rememberSaveable { mutableStateOf<Double?>(null) }
-    var operation by rememberSaveable { mutableStateOf<String?>(null) }
+    var savedValue by rememberSaveable {
+        mutableStateOf<Double?>(null)
+    }
+    var operation by rememberSaveable {
+        mutableStateOf<String?>(null)
+    }
     var newNumber by rememberSaveable { mutableStateOf(true) }
+
+    val isLandscape =
+        LocalConfiguration.current.orientation ==
+                Configuration.ORIENTATION_LANDSCAPE
 
     fun clear() {
         input = "0"
@@ -61,7 +71,11 @@ fun Calculator() {
         newNumber = true
     }
 
-    fun calculate(first: Double, second: Double, op: String): Double? {
+    fun calculate(
+        first: Double,
+        second: Double,
+        op: String
+    ): Double? {
         val result = when (op) {
             "+" -> first + second
             "-" -> first - second
@@ -70,7 +84,6 @@ fun Calculator() {
                 if (second == 0.0) return null
                 first / second
             }
-
             else -> return null
         }
 
@@ -113,7 +126,11 @@ fun Calculator() {
         val value = input.toDoubleOrNull() ?: return
 
         if (operation != null && !newNumber) {
-            val result = calculate(savedValue ?: value, value, operation!!)
+            val result = calculate(
+                savedValue ?: value,
+                value,
+                operation!!
+            )
 
             if (result == null) {
                 input = "Ошибка"
@@ -137,6 +154,7 @@ fun Calculator() {
         val first = savedValue ?: return
         val second = input.toDoubleOrNull() ?: return
         val op = operation ?: return
+
         val result = calculate(first, second, op)
 
         input = if (result == null) {
@@ -155,6 +173,11 @@ fun Calculator() {
         newNumber = false
     }
 
+    val buttonHeight = if (isLandscape) 40.dp else 58.dp
+    val screenPadding = if (isLandscape) 6.dp else 12.dp
+    val resultFontSize = if (isLandscape) 30.sp else 42.sp
+    val rowSpacing = if (isLandscape) 2.dp else 4.dp
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -170,7 +193,7 @@ fun Calculator() {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(12.dp),
+                    .padding(screenPadding),
                 verticalArrangement = Arrangement.Bottom
             ) {
                 Text(
@@ -179,74 +202,111 @@ fun Calculator() {
                         .testTag("result")
                         .fillMaxWidth()
                         .weight(1f),
-                    fontSize = 42.sp,
+                    fontSize = resultFontSize,
                     textAlign = TextAlign.End,
                     maxLines = 1,
                     overflow = TextOverflow.Clip
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(
+                    modifier = Modifier.height(
+                        if (isLandscape) 2.dp else 8.dp
+                    )
+                )
 
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(rowSpacing)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement =
+                            Arrangement.spacedBy(rowSpacing)
                     ) {
-                        CalculatorButton("C", Modifier.weight(1f), ::clear)
-                        CalculatorButton("CE", Modifier.weight(1f), ::clearEntry)
-                        CalculatorButton("/", Modifier.weight(1f)) {
+                        CalculatorButton(
+                            "C", Modifier.weight(1f), buttonHeight, ::clear
+                        )
+                        CalculatorButton(
+                            "CE", Modifier.weight(1f), buttonHeight, ::clearEntry
+                        )
+                        CalculatorButton(
+                            "/", Modifier.weight(1f), buttonHeight
+                        ) {
                             chooseOperation("/")
                         }
-                        CalculatorButton("×", Modifier.weight(1f)) {
+                        CalculatorButton(
+                            "×", Modifier.weight(1f), buttonHeight
+                        ) {
                             chooseOperation("*")
                         }
                     }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement =
+                            Arrangement.spacedBy(rowSpacing)
                     ) {
-                        CalculatorButton("7", Modifier.weight(1f)) { enterDigit("7") }
-                        CalculatorButton("8", Modifier.weight(1f)) { enterDigit("8") }
-                        CalculatorButton("9", Modifier.weight(1f)) { enterDigit("9") }
-                        CalculatorButton("−", Modifier.weight(1f)) {
+                        CalculatorButton("7", Modifier.weight(1f), buttonHeight) {
+                            enterDigit("7")
+                        }
+                        CalculatorButton("8", Modifier.weight(1f), buttonHeight) {
+                            enterDigit("8")
+                        }
+                        CalculatorButton("9", Modifier.weight(1f), buttonHeight) {
+                            enterDigit("9")
+                        }
+                        CalculatorButton("−", Modifier.weight(1f), buttonHeight) {
                             chooseOperation("-")
                         }
                     }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement =
+                            Arrangement.spacedBy(rowSpacing)
                     ) {
-                        CalculatorButton("4", Modifier.weight(1f)) { enterDigit("4") }
-                        CalculatorButton("5", Modifier.weight(1f)) { enterDigit("5") }
-                        CalculatorButton("6", Modifier.weight(1f)) { enterDigit("6") }
-                        CalculatorButton("+", Modifier.weight(1f)) {
+                        CalculatorButton("4", Modifier.weight(1f), buttonHeight) {
+                            enterDigit("4")
+                        }
+                        CalculatorButton("5", Modifier.weight(1f), buttonHeight) {
+                            enterDigit("5")
+                        }
+                        CalculatorButton("6", Modifier.weight(1f), buttonHeight) {
+                            enterDigit("6")
+                        }
+                        CalculatorButton("+", Modifier.weight(1f), buttonHeight) {
                             chooseOperation("+")
                         }
                     }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement =
+                            Arrangement.spacedBy(rowSpacing)
                     ) {
-                        CalculatorButton("1", Modifier.weight(1f)) { enterDigit("1") }
-                        CalculatorButton("2", Modifier.weight(1f)) { enterDigit("2") }
-                        CalculatorButton("3", Modifier.weight(1f)) { enterDigit("3") }
-                        CalculatorButton(",", Modifier.weight(1f), ::enterComma)
+                        CalculatorButton("1", Modifier.weight(1f), buttonHeight) {
+                            enterDigit("1")
+                        }
+                        CalculatorButton("2", Modifier.weight(1f), buttonHeight) {
+                            enterDigit("2")
+                        }
+                        CalculatorButton("3", Modifier.weight(1f), buttonHeight) {
+                            enterDigit("3")
+                        }
+                        CalculatorButton(",", Modifier.weight(1f), buttonHeight, ::enterComma)
                     }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement =
+                            Arrangement.spacedBy(rowSpacing)
                     ) {
-                        CalculatorButton("0", Modifier.weight(2f)) { enterDigit("0") }
-                        CalculatorButton("=", Modifier.weight(2f), ::calculateResult)
+                        CalculatorButton("0", Modifier.weight(2f), buttonHeight) {
+                            enterDigit("0")
+                        }
+                        CalculatorButton("=", Modifier.weight(2f), buttonHeight, ::calculateResult)
                     }
                 }
             }
@@ -258,13 +318,14 @@ fun Calculator() {
 private fun CalculatorButton(
     label: String,
     modifier: Modifier = Modifier,
+    buttonHeight: androidx.compose.ui.unit.Dp = 58.dp,
     onClick: () -> Unit
 ) {
     Button(
         onClick = onClick,
         modifier = modifier
-            .padding(vertical = 2.dp)
-            .height(58.dp)
+            .padding(vertical = 1.dp)
+            .height(buttonHeight)
     ) {
         Text(
             text = label,
