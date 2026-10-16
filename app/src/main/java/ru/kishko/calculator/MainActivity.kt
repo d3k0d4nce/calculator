@@ -104,6 +104,7 @@ fun Calculator() {
         input = when {
             newNumber -> digit
             input == "0" -> digit
+            input == "-" -> "-$digit"
             input.length < 15 -> input + digit
             else -> input
         }
@@ -117,6 +118,8 @@ fun Calculator() {
         if (newNumber) {
             input = "0."
             newNumber = false
+        } else if (input == "-") {
+            input = "-0."
         } else if (!input.contains(".")) {
             input += "."
         }
@@ -148,6 +151,26 @@ fun Calculator() {
 
         operation = op
         newNumber = true
+    }
+
+    fun enterMinus() {
+        if (input == "Ошибка") clear()
+
+        if (newNumber && input == "0" && operation == null) {
+            input = "-"
+            newNumber = false
+            return
+        }
+
+        if (newNumber && operation != null) {
+            input = "-"
+            newNumber = false
+            return
+        }
+
+        if (input == "-") return
+
+        chooseOperation("-")
     }
 
     fun calculateResult() {
@@ -258,7 +281,7 @@ fun Calculator() {
                             enterDigit("9")
                         }
                         CalculatorButton("−", Modifier.weight(1f), buttonHeight) {
-                            chooseOperation("-")
+                            enterMinus()
                         }
                     }
 
@@ -295,7 +318,9 @@ fun Calculator() {
                         CalculatorButton("3", Modifier.weight(1f), buttonHeight) {
                             enterDigit("3")
                         }
-                        CalculatorButton(",", Modifier.weight(1f), buttonHeight, ::enterComma)
+                        CalculatorButton(
+                            ",", Modifier.weight(1f), buttonHeight, ::enterComma
+                        )
                     }
 
                     Row(
@@ -306,7 +331,9 @@ fun Calculator() {
                         CalculatorButton("0", Modifier.weight(2f), buttonHeight) {
                             enterDigit("0")
                         }
-                        CalculatorButton("=", Modifier.weight(2f), buttonHeight, ::calculateResult)
+                        CalculatorButton(
+                            "=", Modifier.weight(2f), buttonHeight, ::calculateResult
+                        )
                     }
                 }
             }
